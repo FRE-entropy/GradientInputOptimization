@@ -14,16 +14,28 @@
 ```
 GradientInputOptimization/
 ├── data/              # 数据相关
-│   ├── generate_data.py  # 生成合成数据
-│   └── data_loader.py    # 数据加载器
+│   ├── X.npy              # 输入数据
+│   ├── Y.npy              # 标签数据
+│   ├── data_loader.py     # 数据加载器
+│   ├── generate_data.py   # 生成合成数据
+│   └── preprocessing.py   # 数据预处理
 ├── models/            # 模型定义
-│   └── bp_network.py     # BP神经网络模型
+│   ├── bp_network.pth               # 训练好的模型
+│   ├── bp_network.py                # BP神经网络模型
+│   └── bp_network_preprocessor.npz  # 模型预处理数据
+├── output/            # 输出结果
+│   └── evaluation/                  # 评估结果
 ├── scripts/           # 脚本文件
-│   ├── train.py          # 模型训练
-│   ├── predict.py        # 模型预测
-│   └── gradient_optimization.py  # 梯度输入优化
-├── main.py            # 主脚本
-└── README.md          # 项目说明
+│   ├── evaluate.py                  # 模型评估
+│   ├── gradient_optimization.py     # 梯度输入优化
+│   ├── predict.py                   # 模型预测
+│   └── train.py                     # 模型训练
+├── .gitignore         # Git忽略文件
+├── .python-version    # Python版本配置
+├── README.md          # 项目说明
+├── pyproject.toml     # 项目依赖配置
+├── test_gpu.py        # GPU测试脚本
+└── uv.lock            # uv依赖锁定文件
 ```
 
 ## 安装依赖
@@ -39,15 +51,7 @@ uv sync
 
 ## 使用方法
 
-### 1. 运行主脚本
-
-主脚本会执行完整的流程：生成数据、训练模型、预测和梯度输入优化。
-
-```bash
-python main.py
-```
-
-### 2. 单独使用各功能
+### 单独使用各功能
 
 #### 生成数据
 
@@ -73,6 +77,19 @@ python scripts/predict.py
 python scripts/gradient_optimization.py
 ```
 
+#### 评估模型
+
+```bash
+python scripts/evaluate.py
+```
+
+评估脚本会生成详细的评估报告和可视化结果，包括：
+
+- 模型性能指标（MSE、RMSE、MAE、R²）
+- 梯度优化效果评估
+- 损失曲线和预测值对比图
+- 详细的评估报告文件
+
 ## 功能说明
 
 ### BP神经网络
@@ -80,6 +97,7 @@ python scripts/gradient_optimization.py
 - 网络结构：使用`layers`参数定义，格式为`[input_dim, hidden1_dim, hidden2_dim, ..., output_dim]`
 - 默认结构：`[10, 64, 32, 4]`（输入维度10，两个隐藏层分别为64和32，输出维度4）
 - 激活函数：ReLU
+- 预处理功能：支持`minmax`和`standard`两种预处理方法，可通过`preprocessing_methods`参数设置
 
 ### 梯度输入优化
 
@@ -100,7 +118,7 @@ python scripts/gradient_optimization.py
 ### 训练模型
 
 ```
-模型配置: {'layers': [10, 64, 32, 4]}
+模型配置: {'layers': [10, 64, 32, 4], 'preprocessing_methods': ['minmax', 'minmax', 'minmax', 'minmax', 'minmax', 'standard', 'standard', 'standard', 'standard', 'standard']}
 Epoch [10/100], Train Loss: 0.1269, Test Loss: 0.1206
 Epoch [20/100], Train Loss: 0.0548, Test Loss: 0.0635
 Epoch [30/100], Train Loss: 0.0376, Test Loss: 0.0478
@@ -126,11 +144,11 @@ Epoch [100/100], Train Loss: 0.0146, Test Loss: 0.0248
 
 ```
 目标输出: [[1. 2. 3. 4.]]
-初始输入: [[0.5 None None None None None None None None None]]
+固定输入索引: [0, 1]
+初始输入: [[ 0.5        -0.5         0.12345678  0.12345678  0.12345678  0.12345678  0.12345678  0.12345678  0.12345678  0.12345678]]
 Epoch [100/1000], Loss: 0.000230
 优化在第 142 轮收敛
-优化后的输入: [[ 0.5        -1.1055715   0.88773125  0.36921176  0.45868614  3.2019565
-  -0.4965332   0.23538372  0.46930248  0.5527371 ]]
+优化后的输入: [[ 0.5        -0.5         0.88773125  0.36921176  0.45868614  3.2019565  -0.4965332   0.23538372  0.46930248  0.5527371 ]]
 优化后的输出: [[0.9999611 2.0003686 2.9992392 3.9996922]]
 目标输出: [[1. 2. 3. 4.]]
 最终损失: 0.000001
