@@ -1,5 +1,11 @@
 import torch
 import numpy as np
+import os
+import sys
+
+# 添加项目根目录到 Python 路径
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from models.bp_network import BPNetwork
 from scripts.train import load_model
 
@@ -108,6 +114,7 @@ if __name__ == "__main__":
     
     # 固定部分输入（例如固定第0和第1个输入）
     fixed_inputs = [0, 1]
+    print(f"固定输入索引: {fixed_inputs}")
     
     # 初始输入（固定的输入值设为特定值）
     initial_input = np.random.randn(1, 10)
