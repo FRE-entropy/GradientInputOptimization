@@ -38,12 +38,12 @@ def main():
     target_output = np.array([[1.0, 2.0, 3.0, 4.0]])
     print(f"目标输出: {target_output}")
     
-    # 固定部分输入
-    fixed_inputs = [0, 1, 2]  # 固定前3个输入
+    # 固定部分输入（只固定一个非None值）
+    fixed_inputs = [0]  # 固定第0个输入
     
-    # 初始输入
-    initial_input = np.random.randn(1, 10)
-    initial_input[0, fixed_inputs] = [0.1, -0.2, 0.3]  # 设置固定输入的值
+    # 初始输入：只保留第0个值，其他都是None
+    initial_input = np.full((1, 10), None, dtype=object)
+    initial_input[0, 0] = 0.5  # 设置非None值
     print(f"初始输入: {initial_input}")
     
     # 优化输入

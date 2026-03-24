@@ -29,10 +29,22 @@ def optimize_input(model, target_output, initial_input=None, fixed_inputs=None,
         initial_input = np.random.randn(1, model.layers[0])
     else:
         # 如果提供了初始输入，只随机化其中为None的元素
+        # 先创建一个浮点数数组
+        input_array = np.zeros((1, model.layers[0]), dtype=np.float32)
         for i in range(len(initial_input[0])):
             if initial_input[0, i] is None:
-                initial_input[0, i] = np.random.randn()
+                input_array[0, i] = np.random.randn()
+            else:
+                input_array[0, i] = float(initial_input[0, i])
+        initial_input = input_array
     
+    # 保存固定的输入值
+    fixed_values = None
+    if fixed_inputs is not None:
+        # 转换为Python浮点数列表
+        fixed_values = [float(val) for val in initial_input[0, fixed_inputs]]
+    
+    # 转换为张量
     initial_input = torch.tensor(initial_input, dtype=torch.float32, requires_grad=True)
     
     # 定义优化器
@@ -44,17 +56,8 @@ def optimize_input(model, target_output, initial_input=None, fixed_inputs=None,
     loss_history = []
     
     for epoch in range(epochs):
-        # 复制输入以进行优化
-        input_copy = initial_input.clone()
-        
-        # 固定指定的输入
-        if fixed_inputs is not None:
-            with torch.no_grad():
-                for idx in fixed_inputs:
-                    input_copy[0, idx] = initial_input[0, idx].detach()
-        
         # 前向传播
-        output = model(input_copy)
+        output = model(initial_input)
         
         # 计算损失
         loss = criterion(output, target_output)
@@ -67,6 +70,12 @@ def optimize_input(model, target_output, initial_input=None, fixed_inputs=None,
         # 更新输入
         optimizer.step()
         
+        # 重置固定的输入值
+        if fixed_inputs is not None and fixed_values is not None:
+            with torch.no_grad():
+                for i, idx in enumerate(fixed_inputs):
+                    initial_input[0, idx] = fixed_values[i]
+        
         # 检查收敛
         if loss.item() < tolerance:
             print(f"优化在第 {epoch+1} 轮收敛")
@@ -77,7 +86,7 @@ def optimize_input(model, target_output, initial_input=None, fixed_inputs=None,
             print(f'Epoch [{epoch+1}/{epochs}], Loss: {loss.item():.6f}')
     
     # 获取优化后的输入
-    optimized_input = input_copy.detach().numpy()
+    optimized_input = initial_input.detach().numpy()
     
     return optimized_input, loss_history
 
